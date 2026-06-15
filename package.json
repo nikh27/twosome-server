@@ -1,0 +1,20 @@
+{
+  "name": "twosome-sync-server",
+  "version": "1.0.0",
+  "description": "Sync server for Twosome watch party app",
+  "main": "sync-server.js",
+  "scripts": {
+    "start": "node sync-server.js",
+    "dev": "nodemon sync-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
