@@ -1,0 +1,15 @@
+[
+  {
+    "id": "sample_movie_1",
+    "title": "Sample Movie",
+    "description": "Add your first movie by uploading to Cloudinary and updating this file.",
+    "year": 2024,
+    "duration": "2h 0m",
+    "genre": ["Action", "Drama"],
+    "sizeMb": 1500,
+    "cloudinaryPublicId": "sample_movie_1",
+    "cloudName": "dnldlthhh",
+    "thumbnailUrl": "https://res.cloudinary.com/dnldlthhh/video/upload/so_5,w_400,h_220,c_fill/sample_movie_1.jpg",
+    "downloadUrl": "https://res.cloudinary.com/dnldlthhh/video/upload/sample_movie_1.mp4"
+  }
+]
