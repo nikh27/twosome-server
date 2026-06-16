@@ -20,63 +20,16 @@ const io     = new Server(server, {
 
 app.use(express.json());
 
-// ── Load movies from movies.json ──────────────────────────────────────────
-function loadMovies() {
+// ── Cloudinary Direct Fetch ──────────────────────────────────────────────────
+async function fetchCloudinaryMovies() {
   try {
-    const filePath = path.join(__dirname, "movies.json");
-    const raw      = fs.readFileSync(filePath, "utf8");
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error("Could not load movies.json:", e.message);
-    return [];
-  }
-}
-
-// ── REST API ──────────────────────────────────────────────────────────────
-
-// Health check
-app.get("/", (req, res) => {
-  res.send("🎬 Twosome Sync Server is running!");
-});
-app.get("/ping", (req, res) => res.send("pong"));
-
-// GET /api/movies — returns the full movie catalog
-app.get("/api/movies", (req, res) => {
-  const movies = loadMovies();
-  res.json({ success: true, movies });
-});
-
-// GET /api/movies/search?q=interstellar — search by title
-app.get("/api/movies/search", (req, res) => {
-  const query  = (req.query.q || "").toLowerCase();
-  const movies = loadMovies();
-  const result = movies.filter(m =>
-    m.title.toLowerCase().includes(query) ||
-    (m.genre || []).some(g => g.toLowerCase().includes(query))
-  );
-  res.json({ success: true, movies: result });
-});
-
-// GET /api/movies/:id — single movie details
-app.get("/api/movies/:id", (req, res) => {
-  const movies = loadMovies();
-  const movie  = movies.find(m => m.id === req.params.id);
-  if (!movie) return res.status(404).json({ success: false, error: "Movie not found" });
-  res.json({ success: true, movie });
-});
-
-// POST /api/movies/refresh — re-reads movies from Cloudinary
-// (called after you upload a new video to Cloudinary dashboard)
-app.post("/api/movies/refresh", async (req, res) => {
-  try {
-    // Fetch all videos from Cloudinary
     const result = await cloudinary.api.resources({
       resource_type : "video",
       max_results   : 100,
       type          : "upload"
     });
 
-    const movies = result.resources.map(resource => ({
+    return result.resources.map(resource => ({
       id                 : resource.public_id,
       title              : resource.public_id
                              .replace(/_/g, " ")
@@ -101,19 +54,49 @@ app.post("/api/movies/refresh", async (req, res) => {
         format        : "mp4"
       })
     }));
-
-    // Write updated list to movies.json
-    fs.writeFileSync(
-      path.join(__dirname, "movies.json"),
-      JSON.stringify(movies, null, 2)
-    );
-
-    console.log(`[refresh] Found ${movies.length} movies on Cloudinary`);
-    res.json({ success: true, count: movies.length, movies });
-  } catch (e) {
-    console.error("Refresh error:", e.message);
-    res.status(500).json({ success: false, error: e.message });
+  } catch (err) {
+    console.error("Cloudinary fetch error:", err.message);
+    return [];
   }
+}
+
+// ── REST API ──────────────────────────────────────────────────────────────
+
+// Health check
+app.get("/", (req, res) => {
+  res.send("🎬 Twosome Sync Server is running!");
+});
+app.get("/ping", (req, res) => res.send("pong"));
+
+// GET /api/movies — returns the full movie catalog dynamically from Cloudinary
+app.get("/api/movies", async (req, res) => {
+  const movies = await fetchCloudinaryMovies();
+  res.json({ success: true, movies });
+});
+
+// GET /api/movies/search?q=interstellar — search by title
+app.get("/api/movies/search", async (req, res) => {
+  const query  = (req.query.q || "").toLowerCase();
+  const movies = await fetchCloudinaryMovies();
+  const result = movies.filter(m =>
+    m.title.toLowerCase().includes(query) ||
+    (m.genre || []).some(g => g.toLowerCase().includes(query))
+  );
+  res.json({ success: true, movies: result });
+});
+
+// GET /api/movies/:id — single movie details
+app.get("/api/movies/:id", async (req, res) => {
+  const movies = await fetchCloudinaryMovies();
+  const movie  = movies.find(m => m.id === req.params.id);
+  if (!movie) return res.status(404).json({ success: false, error: "Movie not found" });
+  res.json({ success: true, movie });
+});
+
+// POST /api/movies/refresh — backward compatibility for Android app's refresh button
+app.post("/api/movies/refresh", async (req, res) => {
+  const movies = await fetchCloudinaryMovies();
+  res.json({ success: true, count: movies.length, movies });
 });
 
 function formatDuration(seconds) {
