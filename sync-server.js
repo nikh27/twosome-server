@@ -202,5 +202,5 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🎬 Twosome sync server running on port ${PORT}`);
-  console.log(`📽  Movie catalog: ${loadMovies().length} movies loaded`);
+  console.log(`📽  Fetching movies dynamically from Cloudinary`);
 });
