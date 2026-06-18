@@ -183,6 +183,20 @@ io.on("connection", (socket) => {
     });
   });
 
+  // VOICE DATA — relay raw PCM audio bytes to the other user in the room
+  socket.on("voice-data", (data) => {
+    const roomCode = socket.data.roomCode;
+    if (!roomCode) return;
+    socket.to(roomCode).emit("voice-data", data);
+  });
+
+  // VIDEO FRAME — relay JPEG frame bytes to the other user in the room
+  socket.on("video-frame", (data) => {
+    const roomCode = socket.data.roomCode;
+    if (!roomCode) return;
+    socket.to(roomCode).emit("video-frame", data);
+  });
+
   // DISCONNECT
   socket.on("disconnect", () => {
     const roomCode = socket.data.roomCode;
